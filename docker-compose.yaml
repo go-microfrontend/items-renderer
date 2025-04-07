@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    container_name: hp-app
+    ports:
+      - "42069:42069"
+    environment:
+      - TEMPORAL_ADDR=temporal:7233
+      - TASK_QUEUE=items-repository
+    networks:
+      - temporal-network
+
+networks:
+  temporal-network:
+    external: true
