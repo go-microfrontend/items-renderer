@@ -1,0 +1,9 @@
+package catalogue
+
+templ CategoryGrid(categories []string) {
+	<div class="grid grid-cols-[repeat(auto-fit,minmax(320px,1fr))] gap-4">
+		for _, cat := range categories {
+			@category(cat)
+		}
+	</div>
+}

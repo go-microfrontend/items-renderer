@@ -1,0 +1,56 @@
+package catalogue
+
+import "fmt"
+
+templ item(id string) {
+	<div class="aspect-[4/3] rounded-xl bg-gray-100 shadow-sm overflow-hidden">
+		<div class="grid h-full grid-rows-[repeat(3,minmax(0,1fr))] grid-cols-4 p-3 gap-2">
+			@image(id)
+			@name(id)
+			@button()
+		</div>
+	</div>
+}
+
+templ category(id string) {
+	<div
+		id={ id }
+		hx-get={ fmt.Sprintf("/catalogue/%s", id) }
+		hx-target="#content"
+		hx-trigger="click"
+		class="aspect-[1/1] rounded-xl bg-gray-100 hover:bg-violet-300 shadow-sm overflow-hidden relative"
+	>
+		<div class="grid h-full grid-rows-[1fr_auto] p-3 gap-2">
+			<div class="relative w-full h-full">
+				@image(id)
+			</div>
+			<div class="z-10 relative text-center">
+				@name(id)
+			</div>
+		</div>
+	</div>
+}
+
+templ image(id string) {
+	<div class="row-span-2 col-span-2 flex p-1">
+		<div id={ fmt.Sprintf("%s-image", id) } class="w-full aspect-square rounded-lg bg-gray-300 overflow-hidden"></div>
+	</div>
+}
+
+templ name(name string) {
+	<div class="row-span-2 col-span-2 flex flex-col p-1 overflow-hidden">
+		<h3 class="truncate font-medium text-gray-900 text-lg">{ name }</h3>
+	</div>
+}
+
+templ button() {
+	<button
+		class="row-start-3 col-span-4 flex items-center justify-center gap-2 
+              w-full h-full rounded-b-xl bg-violet-300 hover:bg-violet-400 overflow-hidden"
+	>
+		<svg role="img" class="w-5 h-5 text-gray-700">
+			<use href="#shopping-bag-icon"></use>
+		</svg>
+		<span class="text-sm">Add to Cart</span>
+	</button>
+}

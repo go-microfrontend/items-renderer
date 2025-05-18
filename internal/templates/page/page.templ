@@ -1,0 +1,153 @@
+package page
+
+import (
+	"fmt"
+	"time"
+	"strconv"
+	"strings"
+	"github.com/go-microfrontend/items-renderer/internal/domain"
+)
+
+templ Product(p domain.Product, pc domain.ProductCharacteristic) {
+	<div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+		<!-- Product Header -->
+		<div class="p-8 border-b border-gray-200">
+			<div class="flex items-center justify-between">
+				<div>
+					<h1 class="text-3xl font-bold text-gray-900 mb-2">{ p.Name }</h1>
+					<div class="flex items-center space-x-4 text-gray-600">
+						if p.Brand != nil {
+							<span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">Бренд: { *p.Brand }</span>
+						}
+						if p.Category != nil {
+							<span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">Категория: { *p.Category }</span>
+						}
+					</div>
+				</div>
+				if p.Rating != nil {
+					<div class="flex items-center bg-yellow-100 px-4 py-2 rounded-lg">
+						<span class="text-yellow-600 font-bold text-xl">{ fmt.Sprintf("%.1f", *p.Rating) }</span>
+						<svg class="w-6 h-6 text-yellow-500 ml-1" fill="currentColor" viewBox="0 0 20 20">
+							<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+						</svg>
+					</div>
+				}
+			</div>
+		</div>
+		<!-- Product Details -->
+		<div class="grid md:grid-cols-2 gap-8 p-8">
+			<!-- Left Column -->
+			<div class="space-y-8">
+				<!-- Image Section -->
+				<div class="bg-gray-100 rounded-lg overflow-hidden aspect-[4/3]">
+					<img
+						src={ fmt.Sprintf("/images/%s/%s", *p.Category, p.ProductID.String()) }
+						class="w-full h-full object-cover"
+						alt={ "Изображение продукта: " + p.Name }
+					/>
+				</div>
+				<!-- Description moved under image -->
+				if pc.Description != nil {
+					<div class="p-6 bg-gray-50 rounded-lg">
+						<h3 class="text-xl font-semibold mb-4">Описание продукта</h3>
+						<p class="text-gray-600 leading-relaxed">{ *pc.Description }</p>
+					</div>
+				}
+			</div>
+			<!-- Right Column -->
+			<div class="space-y-6">
+				<!-- Price Block -->
+				<div class="bg-emerald-50 p-6 rounded-xl">
+					<div class="text-2xl font-bold text-emerald-800">
+						{ formatPrice(p.Price) }
+					</div>
+					if pc.Weight != nil {
+						<p class="text-sm text-gray-600 mt-2">Цена за { strconv.Itoa(int(*pc.Weight)) }г</p>
+					}
+				</div>
+				<!-- Characteristics -->
+				<div class="space-y-4">
+					<div class="grid grid-cols-2 gap-4">
+						if pc.Weight != nil {
+							<div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+								<span class="text-gray-600">Вес:</span>
+								<span class="font-medium">{ strconv.Itoa(int(*pc.Weight)) }г</span>
+							</div>
+						}
+						if pc.QuantityInPackage != nil {
+							<div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+								<span class="text-gray-600">Количество в упаковке:</span>
+								<span class="font-medium">{ strconv.Itoa(int(*pc.QuantityInPackage)) }</span>
+							</div>
+						}
+						if pc.ShelfLife > 0 {
+							<div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+								<span class="text-gray-600">Срок годности:</span>
+								<span class="font-medium">{ formatShelfLife(pc.ShelfLife) }</span>
+							</div>
+						}
+						if pc.StorageConditions != nil {
+							<div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+								<span class="text-gray-600">Условия хранения:</span>
+								<span class="font-medium">{ *pc.StorageConditions }</span>
+							</div>
+						}
+					</div>
+					<!-- Nutrition Section -->
+					if pc.Nutrition != nil {
+						{{
+						nutritionStr := strings.Trim(*pc.Nutrition, "()")
+						parts := strings.Split(nutritionStr, ",")
+						}}
+						if len(parts) == 4 {
+							{{
+							proteins := strings.TrimSpace(parts[0])
+							fats := strings.TrimSpace(parts[1])
+							carbs := strings.TrimSpace(parts[2])
+							calories := strings.TrimSpace(parts[3])
+							}}
+							<div class="p-6 bg-gray-50 rounded-lg">
+								<h3 class="text-xl font-semibold mb-4">Пищевая ценность (на 100 грамм)</h3>
+								<div class="grid grid-cols-2 gap-4">
+									<div class="flex items-center justify-between p-3 bg-white rounded-lg">
+										<span class="text-gray-600">Белки</span>
+										<span class="font-medium text-emerald-800">{ proteins } г</span>
+									</div>
+									<div class="flex items-center justify-between p-3 bg-white rounded-lg">
+										<span class="text-gray-600">Жиры</span>
+										<span class="font-medium text-emerald-800">{ fats } г</span>
+									</div>
+									<div class="flex items-center justify-between p-3 bg-white rounded-lg">
+										<span class="text-gray-600">Углеводы</span>
+										<span class="font-medium text-emerald-800">{ carbs } г</span>
+									</div>
+									<div class="flex items-center justify-between p-3 bg-white rounded-lg">
+										<span class="text-gray-600">Калории</span>
+										<span class="font-medium text-emerald-800">{ calories } ккал</span>
+									</div>
+								</div>
+							</div>
+						}
+					}
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+func formatPrice(price int64) string {
+	return fmt.Sprintf("%s ₽", formatNumber(float64(price)/10000))
+}
+
+func formatShelfLife(d time.Duration) string {
+	days := int(d.Hours() / 24)
+	return fmt.Sprintf("%d дней", days)
+}
+
+func formatNumber(n float64) string {
+	return strings.ReplaceAll(
+		fmt.Sprintf("%.2f", n),
+		".",
+		",",
+	)
+}

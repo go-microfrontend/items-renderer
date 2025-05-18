@@ -1,10 +1,11 @@
-module github.com/go-microfrontend/host-page
+module github.com/go-microfrontend/items-renderer
 
 go 1.24.2
 
 require (
 	github.com/a-h/templ v0.3.857
 	github.com/jackc/pgx/v5 v5.7.4
+	github.com/pkg/errors v0.8.1
 	go.temporal.io/sdk v1.33.1
 )
 

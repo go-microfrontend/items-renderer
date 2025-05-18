@@ -1,16 +1,16 @@
 build:
-	sudo docker-compose build
+	templ generate
+	docker compose build
 
 up-app:
-	sudo docker-compose up -d app
+	docker compose up -d app
 
 up: up-app
 
 down:
-	sudo docker-compose down
+	docker compose down
 
 restart: down up
 
 app-shell:
-	sudo docker-compose exec app sh
-
+	docker compose exec app sh

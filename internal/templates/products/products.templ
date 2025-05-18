@@ -1,0 +1,69 @@
+package products
+
+import (
+	"fmt"
+	"github.com/go-microfrontend/items-renderer/internal/domain"
+)
+
+templ image(category, id string) {
+	<img
+		id={ id + "-image" }
+		src={ "/images/" + category + "/" + id }
+		class="w-full h-full object-cover absolute inset-0"
+	/>
+}
+
+templ name(productName string, brand *string) {
+	<div class="p-2">
+		<div class="font-medium truncate text-sm">{ productName }</div>
+		if brand != nil {
+			<div class="text-xs text-gray-500 truncate">{ *brand }</div>
+		}
+	</div>
+}
+
+templ price(amount int64) {
+	<div class="px-2 pb-1 text-sm font-bold">
+		₽{ fmt.Sprintf("%.2f", float64(amount)/10000) }
+	</div>
+}
+
+templ rating(score *float32) {
+	<div class="px-2 pb-2 flex items-center gap-1">
+		if score != nil {
+			<div class="text-yellow-400 text-sm">★</div>
+			<div class="text-xs">{ fmt.Sprintf("%.1f", *score) }</div>
+		} else {
+			<div class="text-xs text-gray-400">No ratings</div>
+		}
+	</div>
+}
+
+templ product(p domain.Product) {
+	<div
+		class="aspect-[1/1] w-full bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col"
+		id={ p.ProductID.String() }
+		hx-get={ "/catalogue/product/" + p.ProductID.String() }
+		hx-target="#content"
+		hx-replace-url="true"
+	>
+		<div class="relative h-3/5 flex-none overflow-hidden">
+			@image(*p.Category, p.ProductID.String())
+		</div>
+		<div class="flex-1 flex flex-col justify-between">
+			@name(p.Name, p.Brand)
+			<div>
+				@price(p.Price)
+				@rating(p.Rating)
+			</div>
+		</div>
+	</div>
+}
+
+templ Grid(products []domain.Product) {
+	<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-3">
+		for _, p := range products {
+			@product(p)
+		}
+	</div>
+}

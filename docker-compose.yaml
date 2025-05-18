@@ -1,15 +1,22 @@
 services:
   app:
     build: .
-    container_name: hp-app
-    ports:
-      - "42069:42069"
+    container_name: ir-app-render
     environment:
       - TEMPORAL_ADDR=temporal:7233
-      - TASK_QUEUE=items-repository
+      - TASK_REPO_QUEUE=items-repository
+      # - TASK_IMG_QUEUE=images-storage
     networks:
       - temporal-network
+      # - is-network
+      - render-network
+    # ports:
+      # - "9080:8080"
 
 networks:
   temporal-network:
+    external: true
+  # is-network:
+  #   external: true
+  render-network:
     external: true

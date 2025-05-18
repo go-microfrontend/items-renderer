@@ -7,52 +7,50 @@ import (
 
 	"go.temporal.io/sdk/client"
 
-	"github.com/go-microfrontend/host-page/internal/domain"
-	"github.com/go-microfrontend/host-page/internal/templates"
+	"github.com/go-microfrontend/items-renderer/internal/handlers"
 )
+
+const addr = ":8080"
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
+	slog.SetLogLoggerLevel(slog.LevelDebug)
 
-	dialer, err := client.Dial(client.Options{HostPort: os.Getenv("TEMPORAL_ADDR")})
+	clt, err := client.Dial(client.Options{HostPort: os.Getenv("TEMPORAL_ADDR"), Logger: logger})
 	if err != nil {
 		slog.Error("failed to connect to temporal", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
-	defer dialer.Close()
+	defer clt.Close()
 
-	http.HandleFunc("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		id := r.PathValue("id")
+	catalogueHandler := handlers.NewCatalogue(
+		clt,
+		&client.StartWorkflowOptions{TaskQueue: os.Getenv("TASK_REPO_QUEUE")},
+	)
 
-		var item domain.Item
-		f, err := dialer.ExecuteWorkflow(
-			r.Context(),
-			client.StartWorkflowOptions{TaskQueue: os.Getenv("TASK_QUEUE")},
-			"GetItemByIDWF",
-			id,
-		)
-		if err != nil {
-			slog.Error("failed to execute workflow", slog.String("error", err.Error()))
-			http.Error(w, "Internal", http.StatusInternalServerError)
-			return
-		}
+	categoryHandler := handlers.NewCategory(
+		clt,
+		&client.StartWorkflowOptions{TaskQueue: os.Getenv("TASK_REPO_QUEUE")},
+	)
 
-		err = f.Get(r.Context(), &item)
-		if err != nil {
-			slog.Error("failed to get future", slog.String("error", err.Error()))
-			http.Error(w, "Not Found", http.StatusNotFound)
-			return
-		}
+	pageHandler := handlers.NewPage(
+		clt,
+		&client.StartWorkflowOptions{TaskQueue: os.Getenv("TASK_REPO_QUEUE")},
+	)
 
-		component := templates.Item(&item)
-		err = component.Render(r.Context(), w)
-		if err != nil {
-			slog.Error("failed to render", slog.String("error", err.Error()))
-			http.Error(w, "Internal", http.StatusInternalServerError)
-			return
-		}
-	})
+	server := compose(catalogueHandler, categoryHandler, pageHandler)
+	server.ListenAndServe()
+}
 
-	http.ListenAndServe("0.0.0.0:42069", nil)
+func compose(catalogueHandler, categoryHandler, pageHandler http.Handler) *http.Server {
+	mux := http.NewServeMux()
+	mux.Handle(handlers.CategoryEndpoint, categoryHandler)
+	mux.Handle(handlers.CatalogueEndpoint, catalogueHandler)
+	mux.Handle(handlers.PageEndpoint, pageHandler)
+
+	return &http.Server{
+		Addr:    addr,
+		Handler: mux,
+	}
 }

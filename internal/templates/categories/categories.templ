@@ -1,0 +1,38 @@
+package categories
+
+import "github.com/go-microfrontend/items-renderer/internal/domain"
+
+templ image(name string) {
+	<img
+		id={ name + "-image" }
+		class="w-full h-[calc(100%-3rem)] object-cover"
+		src={ "/images/" + name + "/" + name }
+		alt={ "Image for " + name }
+	/>
+}
+
+templ name(category string) {
+	<div class="h-12 p-2 text-center font-medium flex items-center justify-center">
+		{ category }
+	</div>
+}
+
+templ category(category domain.Category) {
+	<div
+		class="aspect-square bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+		hx-get={ "/catalogue/" + category.Name }
+		hx-target="#content"
+		hx-replace-url="true"
+	>
+		@image(category.Name)
+		@name(*category.Label)
+	</div>
+}
+
+templ Grid(categories []domain.Category) {
+	<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-4">
+		for _, c := range categories {
+			@category(c)
+		}
+	</div>
+}
